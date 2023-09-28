@@ -1,0 +1,11 @@
+{
+    "name": "arafat/banking-cli-php",
+    "require": {
+    },
+
+    "autoload": {
+        "psr-4":{
+            "App\\":"App/"
+        }
+    }
+}
