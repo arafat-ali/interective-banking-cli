@@ -1,9 +1,11 @@
 <?php
+declare(strict_types=1);
 namespace App\Models;
-use App\Models\Auth\Authentication;
+
+use App\Models\Auth\AuthApp;
 class App{
 
-    private Authentication $auth;
+    private AuthApp $authApp;
 
     private const SHOW_CURRENT_BALANCE = 1;
     private const SHOW_TRANSACTION = 2;
@@ -23,13 +25,14 @@ class App{
     ];
 
     public function __construct(){
-        $this->auth = New Authentication();
+        $this->authApp = New AuthApp();
         //$this->skyApp = New InterectiveSkyApp(new FileStorage());
     }
 
     public function run(){
-        $this->auth->run();
-        while(true && $this->auth->choice!=0 ){
+        $this->authApp->run();
+
+        while(true && $this->authApp->choice!=0 ){
             foreach ($this->options as $option => $label) {
                 printf("Press %d to - %s\n", $option, $label);
             }

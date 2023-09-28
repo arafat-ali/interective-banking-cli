@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 namespace App\Models\Auth;
+use App\Controller\Customer\AuthController;
 
-class Authentication{
+class AuthApp{
 
+    private AuthController $authController;
+    
     private const LOGIN = 1;
     private const REGISTER = 2;
     private const EXIT = 0;
@@ -20,7 +23,7 @@ class Authentication{
     ];
 
     public function __construct(){
-        //$this->skyApp = New InterectiveSkyApp(new FileStorage());
+        $this->authController = New AuthController();
     }
 
     public function run(){
@@ -33,7 +36,7 @@ class Authentication{
             $this->choice = intval(readline("Enter your option: "));
             switch ($this->choice) {
                 case self::LOGIN:
-                    echo "";
+                    $this->authController->login();
                     break;
                 
                 case self::REGISTER:
