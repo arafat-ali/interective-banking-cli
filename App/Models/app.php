@@ -50,7 +50,9 @@ class App{
                     echo "";
                     break;
                 case self::LOGOUT:
-                    return;
+                    $this->authApp->logoutAuthCustomer();
+                    $this->authApp->run();
+                    break;
                 default:
                     echo "Invalid option.\n";
             }

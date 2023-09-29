@@ -36,6 +36,10 @@ class AuthApp{
         return $this->customer;
     }
 
+    public function logoutAuthCustomer(){
+        $this->loginSuccess = false;
+    }
+
     public function run(){
         echo "\nWellcome to Interective Sky Banking App!!\n\n";
         while(true){
