@@ -1,9 +1,13 @@
 <?php
+declare(strict_types=1);
 namespace App\Models;
-use App\Models\Auth\Authentication;
+
+use App\Models\Auth\AuthApp;
+use App\Models\Customer\Customer;
 class App{
 
-    private Authentication $auth;
+    private AuthApp $authApp;
+    private Customer $authCustomer;
 
     private const SHOW_CURRENT_BALANCE = 1;
     private const SHOW_TRANSACTION = 2;
@@ -23,13 +27,16 @@ class App{
     ];
 
     public function __construct(){
-        $this->auth = New Authentication();
+        $this->authApp = New AuthApp();
         //$this->skyApp = New InterectiveSkyApp(new FileStorage());
     }
 
     public function run(){
-        $this->auth->run();
-        while(true && $this->auth->choice!=0 ){
+        $this->authApp->run();
+        $this->authCustomer = $this->authApp->getAuthCustomer();
+        printf("\nWellcome %s\n\n", $this->authCustomer->getName());
+        
+        while($this->authApp->getAuthenticationSuccess() ){
             foreach ($this->options as $option => $label) {
                 printf("Press %d to - %s\n", $option, $label);
             }
@@ -37,11 +44,15 @@ class App{
             $choice = intval(readline("Enter your option: "));
             switch ($choice) {
                 case self::SHOW_CURRENT_BALANCE:
-                    echo "Current Balance is 500000";
+                    printf("\nYour Current Balance is %.2f Taka\n\n", $this->authCustomer->getBalance());
                     break;
-                
+                case self::SHOW_TRANSACTION:
+                    echo "";
+                    break;
                 case self::LOGOUT:
-                    return;
+                    $this->authApp->logoutAuthCustomer();
+                    $this->authApp->run();
+                    break;
                 default:
                     echo "Invalid option.\n";
             }
