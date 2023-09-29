@@ -1,6 +1,7 @@
 {
     "name": "arafat/banking-cli-php",
     "require": {
+        "nesbot/carbon": "^2.71"
     },
 
     "autoload": {

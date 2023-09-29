@@ -46,6 +46,7 @@ class AuthApp{
             foreach ($this->options as $option => $label) {
                 printf("Press %d to - %s\n", $option, $label);
             }
+            printf("\n");
 
             $this->choice = intval(readline("Enter your option: "));
             switch ($this->choice) {

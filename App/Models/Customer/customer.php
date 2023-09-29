@@ -40,6 +40,9 @@ class Customer {
         return $this->password;
     }
 
+    public function setBalance(float $balance){
+        $this->balance = $balance;
+    }
 
     public function getBalance(){
         return $this->balance;
