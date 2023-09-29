@@ -18,6 +18,33 @@ class Customer {
         $this->balance = $balance;
     }
 
+
+    public function getCustomer(){
+        return [
+            'name' => $this->name,
+            'email' => $this->email,
+            'password' => $this->password,
+            'balance' => $this->balance
+        ];
+    }
+
+    public function getName(){
+        return $this->name;
+    }
+
+    public function getEmail(){
+        return $this->email;
+    }
+
+    public function getPassword(){
+        return $this->password;
+    }
+
+
+    public function getBalance(){
+        return $this->balance;
+    }
+
     public function getFileName(){
         return $this->filename;
     }

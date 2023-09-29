@@ -3,16 +3,18 @@
 declare(strict_types=1);
 namespace App\Models\Auth;
 use App\Controller\Customer\AuthController;
+use App\Models\Customer\Customer;
 
 class AuthApp{
 
     private AuthController $authController;
+    private Customer $customer;
     
     private const LOGIN = 1;
     private const REGISTER = 2;
     private const EXIT = 0;
 
-    public bool $loginSuccess = false;
+    private bool $loginSuccess = false;
     public int $choice;
 
 
@@ -26,6 +28,14 @@ class AuthApp{
         $this->authController = New AuthController();
     }
 
+    public function getAuthenticationSuccess():bool{
+        return $this->loginSuccess;
+    }
+
+    public function getAuthCustomer():Customer{
+        return $this->customer;
+    }
+
     public function run(){
         echo "\nWellcome to Interective Sky Banking App!!\n\n";
         while(true){
@@ -36,11 +46,20 @@ class AuthApp{
             $this->choice = intval(readline("Enter your option: "));
             switch ($this->choice) {
                 case self::LOGIN:
-                    $this->authController->login();
+                    $this->loginSuccess = $this->authController->login();
+                    if($this->loginSuccess){
+                        $this->customer = $this->authController->getCustomer();
+                        return;
+                    }
                     break;
                 
                 case self::REGISTER:
-                    return;
+                    $this->loginSuccess = $this->authController->register();
+                    if($this->loginSuccess) {
+                        $this->customer = $this->authController->getCustomer();
+                        return;
+                    }
+                    break;
                 
                 case self::EXIT:
                     return;

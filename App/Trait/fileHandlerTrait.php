@@ -21,7 +21,8 @@ trait FilehandlerTrait {
     }
 
 
-    public function insertNewItemIntoFile($filePath, $newItem) : bool{
+    public function insertNewItemIntoFile($fileName, $newItem) : bool{
+        $filePath= 'App/Database/'.$fileName;
         if (($open = fopen($filePath, 'a')) !== FALSE) {
             fputcsv($open, $newItem);
             fclose($open);
