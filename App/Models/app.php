@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Auth\AuthApp;
 use App\Models\Customer\Customer;
+use App\Models\SkyApp\InterectiveSkyApp;
 class App{
 
     private AuthApp $authApp;
@@ -47,11 +48,16 @@ class App{
                     printf("\nYour Current Balance is %.2f Taka\n\n", $this->authCustomer->getBalance());
                     break;
                 case self::SHOW_TRANSACTION:
-                    echo "";
+                    (new InterectiveSkyApp($this->authCustomer))->showTransactions();
+                    break;
+
+                case self::DEPOSITE_MONEY:
+                    (new InterectiveSkyApp($this->authCustomer))->dipositMoney();
+
                     break;
                 case self::LOGOUT:
                     $this->authApp->logoutAuthCustomer();
-                    $this->authApp->run();
+                    $this->run();
                     break;
                 default:
                     echo "Invalid option.\n";

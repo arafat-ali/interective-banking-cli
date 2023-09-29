@@ -22,12 +22,7 @@ class AuthController {
         foreach($data as $row){
             if($row[0]==null)break;
             $newCustomer = new Customer();
-            $newCustomer->setCustomer(
-                (string)$row[0], 
-                (string)$row[1], 
-                (string)$row[2], 
-                (float)$row[3]
-            );
+            $newCustomer->setCustomer((string)$row[0], (string)$row[1], (string)$row[2],(float)$row[3]);
             array_push($this->customers, $newCustomer);
         }
     }

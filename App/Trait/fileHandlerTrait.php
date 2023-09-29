@@ -29,7 +29,25 @@ trait FilehandlerTrait {
             return true;
         }
         return false;
-        
+    }
+
+    public function updateBalanceIntoFile($fileName, $email, $amount){
+        $filePath= 'App/Database/'.$fileName;
+        $headingIndex = true;
+        $fileData = [];
+        if (($open = fopen($filePath, 'rw')) !== FALSE) {
+            while (($data = fgetcsv($open, 1000, ",")) !== FALSE) {
+                if($headingIndex==true){
+                    $headingIndex = false;
+                    continue;
+                }
+                if($data[1]===$email){
+                    $data[3] = $amount;
+                }
+            }
+            fclose($open);
+        }
+        return $fileData;
     }
 
 }
