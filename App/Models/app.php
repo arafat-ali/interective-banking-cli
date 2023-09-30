@@ -47,14 +47,23 @@ class App{
                 case self::SHOW_CURRENT_BALANCE:
                     printf("\nYour Current Balance is %.2f Taka\n\n", (new InterectiveSkyApp($this->authCustomer))->getCurrentBalance());
                     break;
+
                 case self::SHOW_TRANSACTION:
                     (new InterectiveSkyApp($this->authCustomer))->showTransactions();
                     break;
 
                 case self::DEPOSITE_MONEY:
                     (new InterectiveSkyApp($this->authCustomer))->dipositMoney();
-
                     break;
+                
+                case self::WITHDRAW_MONEY:
+                    (new InterectiveSkyApp($this->authCustomer))->withdrawMoney();
+                    break;
+
+                case self::TRANSFER_MONEY:
+                    (new InterectiveSkyApp($this->authCustomer))->transferMoney();
+                    break;
+
                 case self::LOGOUT:
                     $this->authApp->logoutAuthCustomer();
                     $this->run();

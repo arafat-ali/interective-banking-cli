@@ -35,6 +35,14 @@ class InterectiveSkyApp{
     public function dipositMoney(){
         $this->transactionController->diposit();
     }
+
+    public function withdrawMoney(){
+        $this->transactionController->withdraw();
+    }
+
+    public function transferMoney(){
+        $this->transactionController->transfer();
+    }
     
         
 }
