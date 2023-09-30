@@ -4,15 +4,22 @@ declare(strict_types=1);
 namespace App\Models\SkyApp;
 use App\Models\Customer\Customer;
 use App\Controller\Customer\TransactionController;
+use App\Controller\Customer\CustomerController;
 
 class InterectiveSkyApp{
     private Customer $authCustomer;
     private TransactionController $transactionController;
+    private CustomerController $customerController;
     
 
     public function __construct(Customer $customer){
         $this->authCustomer = $customer;
         $this->transactionController = new TransactionController($this->authCustomer);
+        $this->customerController = new CustomerController($this->authCustomer);
+    }
+
+    public function getCurrentBalance(){
+        return $this->customerController->getAuthCustomerBalance();
     }
 
     public function showTransactions(){
