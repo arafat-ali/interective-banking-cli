@@ -36,7 +36,7 @@ class TransactionController{
         if($insertIntoFileStatus){
             $transaction->setTransaction($this->customer, $type, $amount, $date);
             array_push($this->transactions, $transaction);
-            $this->balanceUpdate($this->customer->getBalance() + (float) $amount);
+            $this->balanceUpdate($this->customer->getEmail(), $this->customer->getBalance() + (float) $amount);
             $depositSuccess=true;
         }
 
@@ -59,7 +59,7 @@ class TransactionController{
         if($insertIntoFileStatus){
             $transaction->setTransaction($this->customer, $type, $amount, $date);
             array_push($this->transactions, $transaction);
-            $this->balanceUpdate($this->customer->getBalance() - (float) $amount);
+            $this->balanceUpdate($this->customer->getEmail(), $this->customer->getBalance() - (float) $amount);
             $withdrawSuccess=true;
         }
 
@@ -67,15 +67,53 @@ class TransactionController{
         else echo "\nSuccessful Withdraw\n\n";
     }
 
-    private function balanceUpdate(float $updatedAmount){
-        $this->updateBalanceIntoFile($this->customer->getFileName(), $this->customer->getEmail(), $updatedAmount);
-
-    }
+    
 
     
 
     public function transfer(){
-        
+        $email = $this->getEmailWithValidation();
+        if(!$this->checkIfAccountExist($email)){
+            printf("\nAccount with this email - %s not exists!\n", $email);
+            printf("\nTransaction has failed\n");
+        }
+
+        if($email === $this->customer->getEmail()){
+            printf("\nAccount with same account not possible!\n");
+        }
+
+        $amount = intval(readline('Please insert amount in BDT: '));
+        //Transfer Operation
+        $transferSuccess = false;
+        $withdraw = new Transaction;
+        $diposit = new Transaction;
+        $date = Carbon::now()->toDateTimeString();
+
+        $withdrawStatus = $this->insertNewItemIntoFile(
+            $withdraw->getFileName(), [$this->customer->getEmail(), 'WITHDRAW', $amount, $date]
+        );
+        $dipositStatus = $this->insertNewItemIntoFile(
+            $diposit->getFileName(), [$email, 'DIPOSIT', $amount, $date]
+        );
+
+        if($withdrawStatus && $dipositStatus){
+            //Withdraw Operation
+            $withdraw->setTransaction($this->customer, 'WITHDRAW', $amount, $date);
+            array_push($this->transactions, $withdraw);
+            $this->balanceUpdate($this->customer->getEmail(), $this->customer->getBalance() - (float) $amount);
+
+            //Diposit Operation
+            $this->balanceUpdate($email, $this->customer->getBalance() - (float) $amount);
+            $transferSuccess=true;
+        }
+
+        if(!$transferSuccess) echo "\nSomething happened bad!\n\n";
+        else echo "\nSuccessfully Transferred\n\n";
+    }
+
+    private function balanceUpdate(String $email, float $updatedAmount){
+        $this->updateBalanceIntoFile($this->customer->getFileName(), $email, $updatedAmount);
+
     }
 
     private function setTransactions(Array $data){
@@ -87,6 +125,27 @@ class TransactionController{
         }
     }
 
+    private function getEmailWithValidation(){
+        $inputEmail = (string) trim(readline('Please insert your email: '));
+        if (filter_var($inputEmail, FILTER_VALIDATE_EMAIL)) return strtolower($inputEmail);
+        else {
+            echo "\nInvalid Email!\n";
+            $this->getEmailWithValidation();
+        }
+    }
+
+
+    private function checkIfAccountExist(String $email){
+        $customers = $this->getItemsFromFile($this->customer->getFileName());
+        $accountFoundStatus = false;
+        foreach($customers as $row){
+            if($row[1] === $email){
+                $accountFoundStatus = true;
+                break;
+            }
+        }
+        return $accountFoundStatus;
+    }
 
 
 }

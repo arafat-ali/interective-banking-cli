@@ -60,6 +60,10 @@ class App{
                     (new InterectiveSkyApp($this->authCustomer))->withdrawMoney();
                     break;
 
+                case self::TRANSFER_MONEY:
+                    (new InterectiveSkyApp($this->authCustomer))->transferMoney();
+                    break;
+
                 case self::LOGOUT:
                     $this->authApp->logoutAuthCustomer();
                     $this->run();
