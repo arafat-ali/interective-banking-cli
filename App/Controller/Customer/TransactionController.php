@@ -34,12 +34,9 @@ class TransactionController{
         );
 
         if($insertIntoFileStatus){
-            $transaction->setTransaction( $this->customer, $type, $amount, $date);
+            $transaction->setTransaction($this->customer, $type, $amount, $date);
             array_push($this->transactions, $transaction);
-            //$this->customer->setBalance($this->customer->getBalance() + (float) $amount);
-
             $this->balanceUpdate($this->customer->getBalance() + (float) $amount);
-
             $depositSuccess=true;
         }
 
@@ -48,14 +45,34 @@ class TransactionController{
 
     }
 
+    public function withdraw(){
+        $withdrawSuccess = false;
+        $transaction = new Transaction;
+        $type = 'WITHDRAW';
+        $amount = intval(readline('Please insert amount in BDT: '));
+        $date = Carbon::now()->toDateTimeString();
+
+        $insertIntoFileStatus = $this->insertNewItemIntoFile(
+            $transaction->getFileName(), [$this->customer->getEmail(), $type, $amount, $date]
+        );
+
+        if($insertIntoFileStatus){
+            $transaction->setTransaction($this->customer, $type, $amount, $date);
+            array_push($this->transactions, $transaction);
+            $this->balanceUpdate($this->customer->getBalance() - (float) $amount);
+            $withdrawSuccess=true;
+        }
+
+        if(!$withdrawSuccess) echo "\nSomething happened bad!\n\n";
+        else echo "\nSuccessful Withdraw\n\n";
+    }
+
     private function balanceUpdate(float $updatedAmount){
         $this->updateBalanceIntoFile($this->customer->getFileName(), $this->customer->getEmail(), $updatedAmount);
 
     }
 
-    public function withdraw(){
-        
-    }
+    
 
     public function transfer(){
         
