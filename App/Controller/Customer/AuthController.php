@@ -72,7 +72,7 @@ class AuthController {
             $newCustomer->setCustomer($name, $email, md5($password), 0);
             array_push($this->customers, $newCustomer);
             $registerSuccess = true;
-            $this->customer = $customer;
+            $this->customer = $newCustomer;
         }
         if(!$registerSuccess) echo "\nSomething happened bad!\n\n";
         else echo "\nSuccessfully Registerred\n\n";
@@ -86,7 +86,7 @@ class AuthController {
         if (filter_var($inputEmail, FILTER_VALIDATE_EMAIL)) return strtolower($inputEmail);
         else {
             echo "\nInvalid Email!\n";
-            $this->getEmailWithValidation();
+            return $this->getEmailWithValidation();
         }
 
     }
@@ -96,7 +96,7 @@ class AuthController {
         if (strlen($inputPassword)>=6) return $inputPassword;
         else {
             echo "\nPassword minimum length must be 6!\n";
-            $this->getPasswordWithValidation();
+            return $this->getPasswordWithValidation();
         }
 
     }
