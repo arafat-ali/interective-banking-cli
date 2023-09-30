@@ -45,7 +45,7 @@ class App{
             $choice = intval(readline("Enter your option: "));
             switch ($choice) {
                 case self::SHOW_CURRENT_BALANCE:
-                    printf("\nYour Current Balance is %.2f Taka\n\n", $this->authCustomer->getBalance());
+                    printf("\nYour Current Balance is %.2f Taka\n\n", (new InterectiveSkyApp($this->authCustomer))->getCurrentBalance());
                     break;
                 case self::SHOW_TRANSACTION:
                     (new InterectiveSkyApp($this->authCustomer))->showTransactions();
