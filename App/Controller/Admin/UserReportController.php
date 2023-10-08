@@ -3,69 +3,70 @@
 declare(strict_types=1);
 namespace App\Controller\Admin;
 use App\Models\Admin\Admin;
+use App\Models\Customer\Customers;
 use App\Models\Customer\Customer;
+use App\Models\Customer\Transactions;
 use App\Models\Customer\Transaction;
 use App\Trait\FilehandlerTrait;
+use App\Validator\Validator;
 
 class UserReportController {
     use FilehandlerTrait;
     private Admin $authuser;
-    private Array $customers=[];
-    private Array $transactions=[];
+    private Customers $customers;
+    private Transactions $transactions;
 
     public function __construct(Admin $admin){
         $this->authuser = $admin;
-        $this->customers = $this->getItemsFromFile((new Customer)->getFileName());
-        $this->transactions = $this->getItemsFromFile((new Transaction)->getFileName());
+        // $this->customers = $this->getItemsFromFile((new Customer)->getFileName());
+        // $this->transactions = $this->getItemsFromFile((new Transaction)->getFileName());
+
+        // $this->transactions = new Transactions($this->getItemsFromFile((new Transaction)->getFileName()));
+        
+        // print_r($this->transactions);
+        $this->transactions = new Transactions();
+        $this->customers = new Customers($this->getItemsFromFile((new Customer())->getFileName()));
     }
 
     public function getAllCustomer(){
-        foreach($this->customers as $customer){
-            printf("Name: %s, Email: %s, Balance: %.2f\n", $customer[0], $customer[1], $customer[3]);
+        foreach($this->customers->getList() as $customer){
+            printf("Name: %s, Email: %s, Balance: %.2f\n", $customer->getName(), $customer->getEmail(), $customer->getBalance());
         }
     }
 
     public function getAllUserTransactions(){
-        foreach($this->transactions as $transaction){
-            printf("Email - %s, %s - %.2f BDT at %s\n",$transaction[0], $transaction[1], $transaction[2], $transaction[3]);
-        }
+        $this->transactions->setTransactionListOfAllUser($this->getItemsFromFile((new Transaction)->getFileName()),$this->customers->getList());
+        $this->viewTransactionData();
     }
 
     public function getTransactionsOfSpecificUser(){
-        $email = $this->getEmailWithValidation();
-        $customerName = null;
-        foreach($this->customers as $row){
-            if($row[1]===$email){
-                $customerName = $row[0];
-                break;
-            }
-        }
-        if($customerName == null){
-            echo "Account not found!";
+        $validator = new Validator();
+        $email = $validator->getEmailWithValidation();
+
+        $customer = $validator->isUserExist($email, $this->customers->getList());
+        if($customer === null){
+            printf("\nAccount with this email - %s not exists!\n", $email);
+            return false;
         }
 
-        $success = false;
-        printf("\nAll Transaction History of - %s - are--\n\n", $customerName);
-        foreach($this->transactions as $transaction){
-            // printf("\n%s--%s\n", $transaction[0], $email);
-            if($transaction[0]===$email){
-                printf("%s, %s - %.2f BDT at %s\n",$transaction[0], $transaction[1], $transaction[2], $transaction[3]);
-                $success = true;
-            }
-        }
-        if(!$success){
-            printf("\nNo Transaction History found of - %s \n\n", $customerName);
-        }
+        $this->transactions->setTransactionListOfCustomer($this->getItemsFromFile((new Transaction)->getFileName()),$customer);
+
+        printf("\nAll Transaction History of - %s -\n\n", $customer->getName());
+        $this->viewTransactionData();
     }
 
-    private function getEmailWithValidation(){
-        $inputEmail = (string) trim(readline('Please insert your email: '));
-        if (filter_var($inputEmail, FILTER_VALIDATE_EMAIL)) return strtolower($inputEmail);
-        else {
-            echo "\nInvalid Email!\n";
-            $this->getEmailWithValidation();
-        }
 
+    private function viewTransactionData(){
+        $dataFound = false;
+        foreach($this->transactions->getList() as $transaction){
+            $dataFound = true;
+            printf(
+                "Name - %s \t Email - %s, %s - %.2f BDT at %s\n", 
+                $transaction->customer->getName(), $transaction->customer->getEmail(), $transaction->type->value, $transaction->amount, $transaction->date);
+        }
+        if(!$dataFound){
+            printf("\nNo Transaction History found\n\n");
+        }
     }
 
 

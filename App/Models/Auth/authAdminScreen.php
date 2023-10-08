@@ -5,7 +5,7 @@ namespace App\Models\Auth;
 use App\Controller\Admin\AuthController;
 use App\Models\Admin\Admin;
 
-class AuthAdminApp{
+class AuthAdminScreen{
 
     private AuthController $authController;
     private Admin $admin;
@@ -54,7 +54,7 @@ class AuthAdminApp{
                     $this->loginSuccess = $this->authController->login();
                     if($this->loginSuccess){
                         $this->admin = $this->authController->getAdmin();
-                        return;
+                        return true;
                     }
                     break;
                 
@@ -62,15 +62,16 @@ class AuthAdminApp{
                     $this->loginSuccess = $this->authController->register();
                     if($this->loginSuccess) {
                         $this->admin = $this->authController->getAdmin();
-                        return;
+                        return true;
                     }
                     break;
                 
                 case self::EXIT:
-                    return;
+                    return false;
 
                 default:
                     echo "Invalid option.\n";
+                    break;
             }
             
         }

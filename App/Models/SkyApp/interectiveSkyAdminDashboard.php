@@ -5,7 +5,7 @@ namespace App\Models\SkyApp;
 use App\Models\Admin\Admin;
 use App\Controller\Admin\UserReportController;
 
-class InterectiveSkyAdminApp{
+class InterectiveSkyAdminDashboard{
     private Admin $authAdmin;
     private UserReportController $userReportController;
     
