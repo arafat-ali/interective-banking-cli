@@ -3,9 +3,17 @@
 declare(strict_types=1);
 namespace App\Enum;
 
-enum TransactionTypeEnum
+enum TransactionTypeEnum : string
 {
-    case DIPOSIT;
-    case WITHDRAW;
-    case TRANSFER;
+    case DIPOSIT = 'DIPOSIT';
+    case WITHDRAW = 'WITHDRAW';
+
+    public static function fromValue(string $type): self
+    {
+        foreach (self::cases() as $item) {
+            if( $type === $item->value ){
+                return $item;
+            }
+        }
+    }
 }

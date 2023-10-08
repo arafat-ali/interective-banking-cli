@@ -25,7 +25,7 @@ class TransactionController{
     public function diposit(){
         $depositSuccess = false;
         $transaction = new Transaction;
-        $type = 'DIPOSIT';
+        $type = TransactionTypeEnum::DIPOSIT;
         $amount = intval(readline('Please insert amount in BDT: '));
         $date = Carbon::now()->toDateTimeString();
 
@@ -48,7 +48,7 @@ class TransactionController{
     public function withdraw(){
         $withdrawSuccess = false;
         $transaction = new Transaction;
-        $type = 'WITHDRAW';
+        $type = TransactionTypeEnum::WITHDRAW;
         $amount = intval(readline('Please insert amount in BDT: '));
         $date = Carbon::now()->toDateTimeString();
 
@@ -90,15 +90,15 @@ class TransactionController{
         $date = Carbon::now()->toDateTimeString();
 
         $withdrawStatus = $this->insertNewItemIntoFile(
-            $withdraw->getFileName(), [$this->customer->getEmail(), 'WITHDRAW', $amount, $date]
+            $withdraw->getFileName(), [$this->customer->getEmail(), TransactionTypeEnum::WITHDRAW, $amount, $date]
         );
         $dipositStatus = $this->insertNewItemIntoFile(
-            $diposit->getFileName(), [$email, 'DIPOSIT', $amount, $date]
+            $diposit->getFileName(), [$email, TransactionTypeEnum::DIPOSIT, $amount, $date]
         );
 
         if($withdrawStatus && $dipositStatus){
             //Withdraw Operation
-            $withdraw->setTransaction($this->customer, 'WITHDRAW', $amount, $date);
+            $withdraw->setTransaction($this->customer, TransactionTypeEnum::WITHDRAW, $amount, $date);
             array_push($this->transactions, $withdraw);
             $this->balanceUpdate($this->customer->getEmail(), $this->customer->getBalance() - (float) $amount);
 
@@ -120,7 +120,7 @@ class TransactionController{
         foreach($data as $row){
             if(strtolower((string)$row[0]) != $this->customer->getEmail()) continue;
             $transaction = new Transaction();
-            $transaction->setTransaction($this->customer, $row[1], (float)$row[2],$row[3]);
+            $transaction->setTransaction($this->customer, TransactionTypeEnum::fromValue($row[1]), (float)$row[2],$row[3]);
             array_push($this->transactions, $transaction);
         }
     }
@@ -130,7 +130,7 @@ class TransactionController{
         if (filter_var($inputEmail, FILTER_VALIDATE_EMAIL)) return strtolower($inputEmail);
         else {
             echo "\nInvalid Email!\n";
-            $this->getEmailWithValidation();
+            return $this->getEmailWithValidation();
         }
     }
 

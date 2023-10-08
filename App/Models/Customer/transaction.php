@@ -7,13 +7,14 @@ use App\Enum\TransactionTypeEnum;
 
 class Transaction{
     public Customer $customer;
-    public string $type;
+    public TransactionTypeEnum $type;
     public float $amount;
     public string $date;
     private string $filename = 'transactions.csv';
 
 
-    public function setTransaction(Customer $customer, string $type, float $amount, string $date){
+    public function setTransaction(Customer $customer, TransactionTypeEnum $type, float $amount, string $date){
+        var_dump($type);
         $this->customer = $customer;
         $this->type = $type;
         $this->amount = $amount;

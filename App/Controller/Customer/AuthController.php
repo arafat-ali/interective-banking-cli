@@ -2,29 +2,23 @@
 
 declare(strict_types=1);
 namespace App\Controller\Customer;
+
+use App\Models\Customer\Customers;
 use App\Models\Customer\Customer;
+use App\Validator\Validator;
 use App\Trait\FilehandlerTrait;
 
 class AuthController {
     use FilehandlerTrait;
-    private Array $customers=[];
-
+    private Customers $customers;
     private Customer $customer;
+    private Validator $validator;
 
     public function __construct()
     {
+        $this->validator = new Validator();
         $this->customer = new Customer();
-        $this->setCustomers($this->getItemsFromFile($this->customer->getFileName()));
-    }
-
-
-    private function setCustomers(Array $data){
-        foreach($data as $row){
-            if($row[0]==null)break;
-            $newCustomer = new Customer();
-            $newCustomer->setCustomer((string)$row[0], (string)$row[1], (string)$row[2],(float)$row[3]);
-            array_push($this->customers, $newCustomer);
-        }
+        $this->customers = new Customers($this->getItemsFromFile($this->customer->getFileName()));
     }
 
     public function getCustomer():Customer{
@@ -33,74 +27,52 @@ class AuthController {
 
 
     public function Login():bool{
-        $email = $this->getEmailWithValidation();
-        $password = $this->getPasswordWithValidation();
-        $loginStatus = false;
-        foreach($this->customers as $customer){
-            if($customer->getEmail()===$email){
-                if($customer->getPassword() === md5($password)) $loginStatus=true;
-                $this->customer = $customer;
-                break;
-            }
+        $email = $this->validator->getEmailWithValidation();
+        $password = $this->validator->getPasswordWithValidation();
+
+        $customer = $this->validator->isUserExist($email, $this->customers->getList());
+        if($customer === null){
+            echo "Account not found!\n\n";
+            return false;
         }
-        if(!$loginStatus) {
+
+        if($customer->getPassword() !== md5($password)){
             echo "\nInvalid credential!\n\n";
+            return false;
         }
-        return $loginStatus;
+        $this->customer = $customer;
+        return true;
     }
 
 
     public function register():bool{
         $name = (string) trim(readline('Please insert your name: '));
-        $email = $this->getEmailWithValidation();
-        $password = $this->getPasswordWithValidation();
-        $accountStatus = true;
-        $registerSuccess = false;
-        foreach($this->customers as $customer){
-            if($customer->getEmail()===$email){
-                $accountStatus = false;
-                break;
-            }
-        }
-        if(!$accountStatus){
+        $email = $this->validator->getEmailWithValidation();
+        $password = $this->validator->getPasswordWithValidation();
+        
+
+        if($this->validator->isUserExist($email, $this->customers->getList()) !==null){
             echo "Account already available with this email!";
+            return false;
         }
 
+        $registerSuccess = false;
+        //Insert data into file
         $insertIntoFileStatus = $this->insertNewItemIntoFile($this->customer->getFileName(), [ $name, $email, md5($password), 0]);
+
         if($insertIntoFileStatus){
-            $newCustomer = new Customer();
-            $newCustomer->setCustomer($name, $email, md5($password), 0);
-            array_push($this->customers, $newCustomer);
+            $this->customer->setCustomer($name, $email, md5($password), 0);
+            $this->customers->insertCustomerToList($this->customer);
             $registerSuccess = true;
-            $this->customer = $newCustomer;
         }
-        if(!$registerSuccess) echo "\nSomething happened bad!\n\n";
-        else echo "\nSuccessfully Registerred\n\n";
-        
+
+        if(!$registerSuccess) {
+            echo "\nSomething happened bad!\n\n";
+            return false;
+        }
+        echo "\nSuccessfully Registerred\n\n";
         return $registerSuccess;
     }
-
-
-    private function getEmailWithValidation(){
-        $inputEmail = (string) trim(readline('Please insert your email: '));
-        if (filter_var($inputEmail, FILTER_VALIDATE_EMAIL)) return strtolower($inputEmail);
-        else {
-            echo "\nInvalid Email!\n";
-            return $this->getEmailWithValidation();
-        }
-
-    }
-
-    private function getPasswordWithValidation(){
-        $inputPassword = (string) readline('Please insert your password: ');
-        if (strlen($inputPassword)>=6) return $inputPassword;
-        else {
-            echo "\nPassword minimum length must be 6!\n";
-            return $this->getPasswordWithValidation();
-        }
-
-    }
-    
 
 
 }
