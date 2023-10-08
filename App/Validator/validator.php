@@ -37,4 +37,9 @@ class Validator{
         return $userInfo;
     }
 
+
+    public function isUserHaveEnounghBalance(float $amount, float $balance){
+        return $balance>=$amount ? true : false;
+    }
+
 }
