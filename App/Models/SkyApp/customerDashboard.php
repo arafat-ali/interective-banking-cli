@@ -23,7 +23,7 @@ class CustomerDashboard{
     }
 
     public function showTransactions(){
-        printf("\nYour Transactions are-----\n");
+        printf("\nYour Transactions are -----\n");
         $transactions = $this->transactionController->getTransactions();
         foreach($transactions as $transaction){
             printf("Email - %s, %s - %.2f BDT at %s\n",$this->authCustomer->getEmail(), $transaction->type->value, $transaction->amount, $transaction->date);
