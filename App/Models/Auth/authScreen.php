@@ -5,7 +5,7 @@ namespace App\Models\Auth;
 use App\Controller\Customer\AuthController;
 use App\Models\Customer\Customer;
 
-class AuthApp{
+class AuthScreen{
 
     private AuthController $authController;
     private Customer $customer;
@@ -49,12 +49,13 @@ class AuthApp{
             printf("\n");
 
             $this->choice = intval(readline("Enter your option: "));
+            print($this->choice);
             switch ($this->choice) {
                 case self::LOGIN:
                     $this->loginSuccess = $this->authController->login();
                     if($this->loginSuccess){
                         $this->customer = $this->authController->getCustomer();
-                        return;
+                        return true;
                     }
                     break;
                 
@@ -62,15 +63,16 @@ class AuthApp{
                     $this->loginSuccess = $this->authController->register();
                     if($this->loginSuccess) {
                         $this->customer = $this->authController->getCustomer();
-                        return;
+                        return true;
                     }
                     break;
                 
                 case self::EXIT:
-                    return;
+                    return false;
 
                 default:
-                    echo "Invalid option.\n";
+                    echo "\nInvalid option.\n";
+                    break;
             }
             
         }

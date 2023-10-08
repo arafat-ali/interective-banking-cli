@@ -3,40 +3,42 @@
 declare(strict_types=1);
 namespace App\Controller\Customer;
 use App\Trait\FilehandlerTrait;
+use App\Validator\Validator;
 use App\Models\Customer\Customer;
+use App\Models\Customer\Customers;
 use App\Models\Customer\Transaction;
+use App\Models\Customer\Transactions;
 use App\Enum\TransactionTypeEnum;
 use Carbon\Carbon;
 
 class TransactionController{
     use FilehandlerTrait;
-    private array $transactions = [];
+    private Transactions $transactions;
+    private Customers $customers;
     private Customer $customer;
 
     public function __construct(Customer $customer){
         $this->customer = $customer;
-        $this->setTransactions($this->getItemsFromFile((new Transaction)->getFileName()));
+        $this->transactions = new Transactions($this->getItemsFromFile((new Transaction)->getFileName()), $this->customer);
+        $this->customers = new Customers($this->getItemsFromFile($this->customer->getFileName()));
     }
 
     public function getTransactions(){
-        return $this->transactions;
+        return $this->transactions->getList();
     }
 
     public function diposit(){
-        $depositSuccess = false;
-        $transaction = new Transaction;
         $type = TransactionTypeEnum::DIPOSIT;
         $amount = intval(readline('Please insert amount in BDT: '));
         $date = Carbon::now()->toDateTimeString();
 
-        $insertIntoFileStatus = $this->insertNewItemIntoFile(
-            $transaction->getFileName(), [$this->customer->getEmail(), $type, $amount, $date]
-        );
-
+        //Inserting into File
+        $insertIntoFileStatus = $this->transactionOperation([$type->value, $amount, $date]);
+        $depositSuccess = false;
         if($insertIntoFileStatus){
-            $transaction->setTransaction($this->customer, $type, $amount, $date);
-            array_push($this->transactions, $transaction);
-            $this->balanceUpdate($this->customer->getEmail(), $this->customer->getBalance() + (float) $amount);
+            //Updating Balance in file storage
+            $this->balanceUpdateOfCustomer($this->customer->getEmail(), (float)$amount, $type);
+            $this->customer->setBalance($this->customer->getBalance() + (float)$amount);
             $depositSuccess=true;
         }
 
@@ -46,20 +48,23 @@ class TransactionController{
     }
 
     public function withdraw(){
-        $withdrawSuccess = false;
-        $transaction = new Transaction;
         $type = TransactionTypeEnum::WITHDRAW;
         $amount = intval(readline('Please insert amount in BDT: '));
         $date = Carbon::now()->toDateTimeString();
 
-        $insertIntoFileStatus = $this->insertNewItemIntoFile(
-            $transaction->getFileName(), [$this->customer->getEmail(), $type, $amount, $date]
-        );
+        //Check if the user have sufficient balance
+        if(!(new Validator())->isUserHaveEnounghBalance($amount, $this->customer->getBalance())){
+            echo "\nYou don't have enough balance\n\n";
+            return;
+        }
 
+        //Inserting into File
+        $insertIntoFileStatus = $this->transactionOperation([$type->value, $amount, $date]);
+        $withdrawSuccess = false;
         if($insertIntoFileStatus){
-            $transaction->setTransaction($this->customer, $type, $amount, $date);
-            array_push($this->transactions, $transaction);
-            $this->balanceUpdate($this->customer->getEmail(), $this->customer->getBalance() - (float) $amount);
+            //Updating Balance in file storage
+            $this->balanceUpdateOfCustomer($this->customer->getEmail(), (float) $amount, $type);
+            $this->customer->setBalance($this->customer->getBalance() - (float)$amount);
             $withdrawSuccess=true;
         }
 
@@ -69,41 +74,44 @@ class TransactionController{
 
     
 
-    
-
     public function transfer(){
-        $email = $this->getEmailWithValidation();
-        if(!$this->checkIfAccountExist($email)){
+        $validator = new Validator();
+        $email = $validator->getEmailWithValidation();
+
+        $customer = $validator->isUserExist($email, $this->customers->getList());
+        if($customer === null){
             printf("\nAccount with this email - %s not exists!\n", $email);
             printf("\nTransaction has failed\n");
+            return false;
         }
 
         if($email === $this->customer->getEmail()){
             printf("\nAccount with same account not possible!\n");
+            return false;
         }
 
         $amount = intval(readline('Please insert amount in BDT: '));
+
+        //Check if the user have sufficient balance
+        if(!(new Validator())->isUserHaveEnounghBalance($amount, $this->customer->getBalance())){
+            echo "\nYou don't have enough balance\n\n";
+            return;
+        }
+
         //Transfer Operation
         $transferSuccess = false;
-        $withdraw = new Transaction;
-        $diposit = new Transaction;
         $date = Carbon::now()->toDateTimeString();
 
-        $withdrawStatus = $this->insertNewItemIntoFile(
-            $withdraw->getFileName(), [$this->customer->getEmail(), TransactionTypeEnum::WITHDRAW, $amount, $date]
-        );
-        $dipositStatus = $this->insertNewItemIntoFile(
-            $diposit->getFileName(), [$email, TransactionTypeEnum::DIPOSIT, $amount, $date]
-        );
+        $withdrawStatus = $this->transactionOperation([TransactionTypeEnum::WITHDRAW->value, $amount, $date]);
+        $dipositStatus = $this->transactionOperation([TransactionTypeEnum::DIPOSIT->value, $amount, $date]);
 
         if($withdrawStatus && $dipositStatus){
-            //Withdraw Operation
-            $withdraw->setTransaction($this->customer, TransactionTypeEnum::WITHDRAW, $amount, $date);
-            array_push($this->transactions, $withdraw);
-            $this->balanceUpdate($this->customer->getEmail(), $this->customer->getBalance() - (float) $amount);
+            //Withdraw Balance update
+            $this->balanceUpdateOfCustomer($this->customer->getEmail(), (float) $amount, TransactionTypeEnum::WITHDRAW);
+            $this->customer->setBalance($this->customer->getBalance() - (float)$amount);
 
-            //Diposit Operation
-            $this->balanceUpdate($email, $this->customer->getBalance() - (float) $amount);
+            //Diposit Balance Update
+            $this->balanceUpdateOfCustomer($email, (float) $amount, TransactionTypeEnum::DIPOSIT);
             $transferSuccess=true;
         }
 
@@ -111,40 +119,19 @@ class TransactionController{
         else echo "\nSuccessfully Transferred\n\n";
     }
 
-    private function balanceUpdate(String $email, float $updatedAmount){
-        $this->updateBalanceIntoFile($this->customer->getFileName(), $email, $updatedAmount);
 
+    private function transactionOperation(array $input):bool{
+        $transaction = new Transaction();
+        $insertIntoFileStatus = $this->insertNewItemIntoFile($transaction->getFileName(), [$this->customer->getEmail(), ...$input]);
+        if($insertIntoFileStatus){
+            $transaction->setTransaction($this->customer, TransactionTypeEnum::fromValue($input[0]), $input[1], $input[2]);
+            $this->transactions->insertTransactionToList($transaction);
+        }
+        return $insertIntoFileStatus;
     }
 
-    private function setTransactions(Array $data){
-        foreach($data as $row){
-            if(strtolower((string)$row[0]) != $this->customer->getEmail()) continue;
-            $transaction = new Transaction();
-            $transaction->setTransaction($this->customer, TransactionTypeEnum::fromValue($row[1]), (float)$row[2],$row[3]);
-            array_push($this->transactions, $transaction);
-        }
-    }
-
-    private function getEmailWithValidation(){
-        $inputEmail = (string) trim(readline('Please insert your email: '));
-        if (filter_var($inputEmail, FILTER_VALIDATE_EMAIL)) return strtolower($inputEmail);
-        else {
-            echo "\nInvalid Email!\n";
-            return $this->getEmailWithValidation();
-        }
-    }
-
-
-    private function checkIfAccountExist(String $email){
-        $customers = $this->getItemsFromFile($this->customer->getFileName());
-        $accountFoundStatus = false;
-        foreach($customers as $row){
-            if($row[1] === $email){
-                $accountFoundStatus = true;
-                break;
-            }
-        }
-        return $accountFoundStatus;
+    private function balanceUpdateOfCustomer(String $email, float $updatedAmount, TransactionTypeEnum $type){
+        $this->updateBalanceIntoFile($this->customer->getFileName(), $email, $updatedAmount, $type->value);
     }
 
 

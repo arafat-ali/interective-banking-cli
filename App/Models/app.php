@@ -2,12 +2,12 @@
 declare(strict_types=1);
 namespace App\Models;
 
-use App\Models\Auth\AuthApp;
+use App\Models\Auth\AuthScreen;
 use App\Models\Customer\Customer;
-use App\Models\SkyApp\InterectiveSkyApp;
+use App\Models\SkyApp\CustomerDashboard;
 class App{
 
-    private AuthApp $authApp;
+    private AuthScreen $authScreen;
     private Customer $authCustomer;
 
     private const SHOW_CURRENT_BALANCE = 1;
@@ -28,16 +28,19 @@ class App{
     ];
 
     public function __construct(){
-        $this->authApp = New AuthApp();
-        //$this->skyApp = New InterectiveSkyApp(new FileStorage());
+        $this->authScreen = New AuthScreen();
+        //$this->skyApp = New CustomerDashboard(new FileStorage());
     }
 
     public function run(){
-        $this->authApp->run();
-        $this->authCustomer = $this->authApp->getAuthCustomer();
+        if(!$this->authScreen->run()) {
+            echo "\nApplication is Exited!\n";
+            return;
+        }
+        $this->authCustomer = $this->authScreen->getAuthCustomer();
         printf("\nWellcome %s\n\n", $this->authCustomer->getName());
         
-        while($this->authApp->getAuthenticationSuccess() ){
+        while($this->authScreen->getAuthenticationSuccess() ){
             foreach ($this->options as $option => $label) {
                 printf("Press %d to - %s\n", $option, $label);
             }
@@ -45,27 +48,27 @@ class App{
             $choice = intval(readline("Enter your option: "));
             switch ($choice) {
                 case self::SHOW_CURRENT_BALANCE:
-                    printf("\nYour Current Balance is %.2f Taka\n\n", (new InterectiveSkyApp($this->authCustomer))->getCurrentBalance());
+                    printf("\nYour Current Balance is %.2f Taka\n\n", (new CustomerDashboard($this->authCustomer))->getCurrentBalance());
                     break;
 
                 case self::SHOW_TRANSACTION:
-                    (new InterectiveSkyApp($this->authCustomer))->showTransactions();
+                    (new CustomerDashboard($this->authCustomer))->showTransactions();
                     break;
 
                 case self::DEPOSITE_MONEY:
-                    (new InterectiveSkyApp($this->authCustomer))->dipositMoney();
+                    (new CustomerDashboard($this->authCustomer))->dipositMoney();
                     break;
                 
                 case self::WITHDRAW_MONEY:
-                    (new InterectiveSkyApp($this->authCustomer))->withdrawMoney();
+                    (new CustomerDashboard($this->authCustomer))->withdrawMoney();
                     break;
 
                 case self::TRANSFER_MONEY:
-                    (new InterectiveSkyApp($this->authCustomer))->transferMoney();
+                    (new CustomerDashboard($this->authCustomer))->transferMoney();
                     break;
 
                 case self::LOGOUT:
-                    $this->authApp->logoutAuthCustomer();
+                    $this->authScreen->logoutAuthCustomer();
                     $this->run();
                     break;
                 default:

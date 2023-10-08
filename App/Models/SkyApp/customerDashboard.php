@@ -6,7 +6,7 @@ use App\Models\Customer\Customer;
 use App\Controller\Customer\TransactionController;
 use App\Controller\Customer\CustomerController;
 
-class InterectiveSkyApp{
+class CustomerDashboard{
     private Customer $authCustomer;
     private TransactionController $transactionController;
     private CustomerController $customerController;
@@ -26,8 +26,7 @@ class InterectiveSkyApp{
         printf("\nYour Transactions are-----\n");
         $transactions = $this->transactionController->getTransactions();
         foreach($transactions as $transaction){
-            printf("Email - %s, %s - %.2f BDT at %s\n", 
-            $this->authCustomer->getEmail(), $transaction->type->value, $transaction->amount, $transaction->date);
+            printf("Email - %s, %s - %.2f BDT at %s\n",$this->authCustomer->getEmail(), $transaction->type->value, $transaction->amount, $transaction->date);
         }
         printf("\n");
     }

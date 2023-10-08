@@ -14,7 +14,6 @@ class Transaction{
 
 
     public function setTransaction(Customer $customer, TransactionTypeEnum $type, float $amount, string $date){
-        var_dump($type);
         $this->customer = $customer;
         $this->type = $type;
         $this->amount = $amount;

@@ -1,10 +1,11 @@
 <?php
 declare(strict_types=1);
 namespace App\Trait;
+use App\Enum\TransactionTypeEnum;
 trait FilehandlerTrait {
 
     public function getItemsFromFile($fileName){
-        $filePath= 'App/Database/'.$fileName;
+        $filePath= 'App/FileStorage/'.$fileName;
         $fileData = [];
         if (($open = fopen($filePath, 'r')) !== FALSE) {
             while (($data = fgetcsv($open, 1000, ",")) !== FALSE) {
@@ -17,7 +18,7 @@ trait FilehandlerTrait {
 
 
     public function insertNewItemIntoFile($fileName, $newItem) : bool{
-        $filePath= 'App/Database/'.$fileName;
+        $filePath= 'App/FileStorage/'.$fileName;
         if (($open = fopen($filePath, 'a')) !== FALSE) {
             fputcsv($open, $newItem);
             fclose($open);
@@ -26,13 +27,14 @@ trait FilehandlerTrait {
         return false;
     }
 
-    public function updateBalanceIntoFile($fileName, $email, $amount){
-        $filePath= 'App/Database/'.$fileName;
+    public function updateBalanceIntoFile($fileName, $email, $amount, $type){
+        $filePath= 'App/FileStorage/'.$fileName;
         $fileData = [];
         if (($open = fopen($filePath, 'r')) !== FALSE) {
             while (($data = fgetcsv($open, 1000, ",")) !== FALSE) {
                 if($data[1]===$email){
-                    $data[3] = $amount;
+                    if($type == 'DIPOSIT') $data[3] += $amount;
+                    else $data[3] -= $amount;
                 }
                 array_push($fileData, $data);
             }
