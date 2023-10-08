@@ -19,7 +19,8 @@ class TransactionController{
 
     public function __construct(Customer $customer){
         $this->customer = $customer;
-        $this->transactions = new Transactions($this->getItemsFromFile((new Transaction)->getFileName()), $this->customer);
+        $this->transactions = new Transactions();
+        $this->transactions->setTransactionListOfCustomer($this->getItemsFromFile((new Transaction)->getFileName()),$this->customer);
         $this->customers = new Customers($this->getItemsFromFile($this->customer->getFileName()));
     }
 
